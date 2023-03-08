@@ -118,3 +118,51 @@ async def change_file_img(img:int,bg:int):
     change_bg.load_pascalvoc_model("xception_pascalvoc.pb")
     change_bg.change_bg_img(f_image_path =link_img, b_image_path =link_change, output_image_name=path)
     return FileResponse(path)
+
+
+# get img bg all
+@app.get('/get_img_bg')
+async def get_img():
+    data=con.execute(change_img.select()).fetchall()
+    return str(data)
+
+
+#  show img bg input
+@app.get("/bg_input/{id}")
+async def get_file_img_input(id:int):
+    link=''
+    data=con.execute(change_img.select().where(change_img.c.id==id)).fetchall()
+    for i in data:
+        i = list(i)
+        link = str(i[-1:]).replace("[", "").replace("]", "").replace("'", "")
+        img_input = FileResponse(link)
+        return img_input
+
+
+
+@app.get("/cut_change_img/{img}/{bg}")
+async def cut_change_img(img:int, bg:int):
+    link=''
+    path=''
+    data=con.execute(cut_change.select().where(cut_change.c.id==img)).fetchall()
+    for i in data:
+        i = list(i)
+        link = str(i[-1:]).replace("[", "").replace("]", "").replace("'", "")
+        name = str(i[1:2]).replace("[", "").replace("]", "").replace("'", "").replace(".","_")
+        output_path = IMAGEDIR_OUT + name
+        with open(link, 'rb') as i:
+            with open(output_path, 'wb') as o:
+                input = i.read()
+                output = remove(input)
+                o.write(output)
+        
+        bg_img=con.execute(change_img.select().where(change_img.c.id==bg)).fetchall()
+        for i in bg_img:
+            i = list(i)
+            link_bg = str(i[-1:]).replace("[", "").replace("]", "").replace("'", "")
+
+            path = IMAGEDIR_OUT_BG + name + '.jpg'
+            change_bg = alter_bg(model_type = "pb")
+            change_bg.load_pascalvoc_model("xception_pascalvoc.pb")
+            change_bg.change_bg_img(f_image_path=output_path ,b_image_path=link_bg, output_image_name=path)
+            return FileResponse(path)
