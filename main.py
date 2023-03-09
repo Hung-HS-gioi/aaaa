@@ -55,7 +55,7 @@ async def cut_file_img(id:int):
         img_output = FileResponse(output_path)
         return img_output
 
-#  show img back time cut
+# show img back time cut
 @app.get("/img_output/{id}")
 async def get_file_img_output(id:int):
     link=''
@@ -67,7 +67,7 @@ async def get_file_img_output(id:int):
         img_output = FileResponse(output_path)
         return img_output
 
-#  show img input
+# show img input
 @app.get("/img_input/{id}")
 async def get_file_img_input(id:int):
     link=''
@@ -77,6 +77,30 @@ async def get_file_img_input(id:int):
         link = str(i[-1:]).replace("[", "").replace("]", "").replace("'", "")
         img_input = FileResponse(link)
         return img_input
+
+# thay img
+@app.put('/update_name_input/{id}')
+async def update_img(id:int,file: UploadFile = File(...)):
+    contents = await file.read()
+    with open(f"{IMAGEDIR}{file.filename}", "wb+") as f:
+        f.write(contents)
+    data=con.execute(cut_change.update().values(img_name=file.filename, url_name=f"{IMAGEDIR}{file.filename}").where(cut_change.c.id==id))
+    con.commit()
+    return {
+            "success": True,
+            "msg":"Student Update Successfully"
+        }
+
+
+# xóa img
+@app.delete('/delete_img/{id}')
+async def delete_img(id:int):
+    data=con.execute(cut_change.delete().where(cut_change.c.id==id))
+    return {
+            "success": True,
+            "msg":"Student Update Successfully"
+        }
+
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -95,7 +119,7 @@ async def post_img(file: UploadFile = File(...)):
     con.commit()
     return {"filename": file.filename}
 
-# change img and show
+# change bg img and show
 @app.get("/changes_img/{img}/{bg}")
 async def change_file_img(img:int,bg:int):
     name =''
@@ -127,7 +151,7 @@ async def get_img():
     return str(data)
 
 
-#  show img bg input
+# show img bg input
 @app.get("/bg_input/{id}")
 async def get_file_img_input(id:int):
     link=''
@@ -138,8 +162,31 @@ async def get_file_img_input(id:int):
         img_input = FileResponse(link)
         return img_input
 
+# thay ảnh bg
+@app.put('/update_name_input_bg/{id}')
+async def update_img(id:int,file: UploadFile = File(...)):
+    contents = await file.read()
+    with open(f"{IMAGEDIR_BG}{file.filename}", "wb+") as f:
+        f.write(contents)
+    data=con.execute(change_img.update().values(img_name=file.filename, url_name=f"{IMAGEDIR_BG}{file.filename}").where(change_img.c.id==id))
+    con.commit()
+    return {
+            "success": True,
+            "msg":"Student Update Successfully"
+        }
+
+# xóa ảnh bg
+@app.delete('/delete_img_bg/{id}')
+async def delete_img_bg(id:int):
+    data=con.execute(change_img.delete().where(change_img.c.id==id))
+    return {
+            "success": True,
+            "msg":"Student Update Successfully"
+        }
 
 
+#--------------------------------------------------------------------------------------------------------------------
+# cut ảnh xong thay bg . file done 
 @app.get("/cut_change_img/{img}/{bg}")
 async def cut_change_img(img:int, bg:int):
     link=''
